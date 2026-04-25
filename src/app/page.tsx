@@ -2,9 +2,9 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
-  ALL_TOPICS, ALL_SYSTEMS, ALL_RATINGS,
+  ALL_TOPICS, ALL_RATINGS, ALL_SYSTEMS,
   SINGLE_GENRE_SCORES, TOPICS, SYSTEMS,
-  type Rating
+  type Rating, type StageScores
 } from "@/lib/data";
 
 // Calculate combined score for a genre + system + rating combo
@@ -17,7 +17,6 @@ function getComboScore(topic: string, genre: string, system: string, rating: Rat
   const systemRatingScore = SYSTEMS[system]?.[rating] ?? 0;
   const topicRatingScore = topicData[rating] ?? 0;
 
-  // Weighted: genre fit (40%) + system fit (35%) + rating fit (25%)
   const score = genreScore * 0.40 + systemGenreScore * 0.25 + systemRatingScore * 0.175 + topicRatingScore * 0.175;
   return Math.round(score);
 }
@@ -30,18 +29,15 @@ function getSystemGenreScore(system: string, genre: string): number {
   return SYSTEMS[system]?.[genre] ?? 0;
 }
 
-function getRatingScore(topic: string, system: string, rating: Rating): number {
-  return ((TOPICS[topic]?.[rating] ?? 0) + (SYSTEMS[system]?.[rating] ?? 0)) / 2;
-}
-
-// All possible combos
 const ALL_GENRES = Object.keys(SINGLE_GENRE_SCORES);
 
-function generateCombos(topic: string): Array<{
+interface Combo {
   genre: string; system: string; rating: Rating;
   score: number; genreScore: number; systemScore: number; ratingScore: number;
-}> {
-  const combos: Array<any> = [];
+}
+
+function generateCombos(topic: string): Combo[] {
+  const combos: Combo[] = [];
   for (const genre of ALL_GENRES) {
     const gs = getGenreScore(topic, genre);
     if (gs === 0) continue;
@@ -63,6 +59,185 @@ function generateCombos(topic: string): Array<{
     }
   }
   return combos.sort((a, b) => b.score - a.score).slice(0, 50);
+}
+
+const STAGE_LABELS: (keyof StageScores)[] = [
+  "Stage 1: Engine",
+  "Stage 1: Gameplay",
+  "Stage 1: Story/Quests",
+  "Stage 2: Dialogues",
+  "Stage 2: Level Design",
+  "Stage 2: AI",
+  "Stage 3: World Design",
+  "Stage 3: Graphics",
+  "Stage 3: Sound",
+];
+
+const STAGE_GROUPS = [
+  { label: "Stage 1", stages: STAGE_LABELS.slice(0, 3) },
+  { label: "Stage 2", stages: STAGE_LABELS.slice(3, 6) },
+  { label: "Stage 3", stages: STAGE_LABELS.slice(6, 9) },
+];
+
+function StageDetail({ combo, onBack }: { combo: Combo; onBack: () => void }) {
+  const stages = SINGLE_GENRE_SCORES[combo.genre];
+
+  return (
+    <div className="animate-slide-up" style={{ padding: 0 }}>
+      {/* Back button + header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        <button
+          onClick={onBack}
+          style={{
+            background: "var(--bg-secondary)",
+            border: "1px solid var(--border)",
+            borderRadius: 12,
+            width: 40,
+            height: 40,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            fontSize: 18,
+            color: "var(--text-primary)",
+            flexShrink: 0,
+          }}
+        >
+          ←
+        </button>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
+            {combo.genre}
+          </div>
+          <div style={{ fontSize: 13, color: "var(--accent)", fontWeight: 500 }}>
+            🕹️ {combo.system}
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", textAlign: "right" }}>
+          <div style={{ fontSize: 24, fontWeight: 800, color: "var(--success)" }}>
+            {combo.score}%
+          </div>
+          <span
+            style={{
+              display: "inline-block",
+              padding: "2px 8px",
+              borderRadius: 4,
+              fontSize: 11,
+              fontWeight: 700,
+              background: combo.rating === "Y" ? "#2ed573" : combo.rating === "E" ? "#f9ca24" : "#e94560",
+              color: combo.rating === "M" ? "#fff" : "#0f0f1a",
+              letterSpacing: 1,
+            }}
+          >
+            {combo.rating}
+          </span>
+        </div>
+      </div>
+
+      {/* Stage-by-stage breakdown */}
+      {STAGE_GROUPS.map((group) => (
+        <div key={group.label} style={{ marginBottom: 16 }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: 1.5,
+              color: "var(--text-muted)",
+              marginBottom: 8,
+            }}
+          >
+            {group.label}
+          </div>
+          <div
+            style={{
+              background: "var(--bg-secondary)",
+              borderRadius: 14,
+              border: "1px solid var(--border)",
+              overflow: "hidden",
+            }}
+          >
+            {group.stages.map((stage) => {
+              const score = stages[stage] ?? 0;
+              const color = score >= 80 ? "#2ed573" : score >= 60 ? "#f9ca24" : score >= 40 ? "#ffa502" : "#e94560";
+              const shortName = stage.replace(/^Stage \d: /, "");
+              return (
+                <div
+                  key={stage}
+                  style={{
+                    padding: "12px 16px",
+                    borderBottom: "1px solid var(--border)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>
+                      {shortName}
+                    </span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color }}>
+                      {score}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 8,
+                      background: "var(--bg-primary)",
+                      borderRadius: 4,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${score}%`,
+                        height: "100%",
+                        background: `linear-gradient(90deg, ${color}, ${color}88)`,
+                        borderRadius: 4,
+                        transition: "width 0.6s ease-out",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* Topic fit summary */}
+      <div
+        style={{
+          background: "var(--bg-card)",
+          border: "1px solid var(--border)",
+          borderRadius: 14,
+          padding: 16,
+          marginTop: 4,
+        }}
+      >
+        <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>
+          Topic Fit Summary
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Genre Fit</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: combo.genreScore >= 80 ? "#2ed573" : "#ffa502" }}>
+              {combo.genreScore}%
+            </span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>System Fit</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: combo.systemScore >= 80 ? "#2ed573" : "#ffa502" }}>
+              {combo.systemScore}%
+            </span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>Rating Fit</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: combo.ratingScore >= 80 ? "#2ed573" : "#ffa502" }}>
+              {combo.ratingScore}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function RatingBadge({ rating }: { rating: Rating }) {
@@ -122,10 +297,9 @@ function ScoreBar({ score }: { score: number }) {
 }
 
 function GenreTags({ selected, onSelect }: { selected: string[]; onSelect: (g: string[]) => void }) {
-  const genres = ALL_GENRES;
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-      {genres.map((g) => {
+      {ALL_GENRES.map((g) => {
         const active = selected.includes(g);
         return (
           <button
@@ -163,8 +337,8 @@ export default function Home() {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [minScore, setMinScore] = useState(0);
+  const [selectedCombo, setSelectedCombo] = useState<Combo | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const filteredTopics = useMemo(() => {
     const q = search.toLowerCase();
@@ -178,9 +352,8 @@ export default function Home() {
     if (selectedGenres.length > 0) {
       filtered = filtered.filter((c) => selectedGenres.includes(c.genre));
     }
-    // Deduplicate: keep best scoring per unique (genre, system, rating)
     const seen = new Set<string>();
-    const deduped: typeof filtered = [];
+    const deduped: Combo[] = [];
     for (const c of filtered) {
       const key = `${c.genre}|${c.system}|${c.rating}`;
       if (!seen.has(key)) {
@@ -188,7 +361,6 @@ export default function Home() {
         deduped.push(c);
       }
     }
-    // Sort
     deduped.sort((a, b) => {
       if (sortKey === "score") return b.score - a.score;
       if (sortKey === "genre") return a.genre.localeCompare(b.genre);
@@ -214,7 +386,17 @@ export default function Home() {
     setSearch(topic);
     setShowDropdown(false);
     setMinScore(0);
+    setSelectedCombo(null);
   }, []);
+
+  // If a combo is selected, show detail view
+  if (selectedCombo) {
+    return (
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 16px 40px", minHeight: "100dvh" }}>
+        <StageDetail combo={selectedCombo} onBack={() => setSelectedCombo(null)} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 16px 40px", minHeight: "100dvh" }}>
@@ -225,7 +407,7 @@ export default function Home() {
           Game Theme Matcher
         </h1>
         <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "4px 0 0" }}>
-          Find the perfect combo for your game idea
+          Tap a combo to see the dev stage breakdown
         </p>
       </div>
 
@@ -235,7 +417,6 @@ export default function Home() {
           Select a Theme / Topic
         </label>
         <input
-          ref={inputRef}
           type="text"
           placeholder="Search themes... (e.g. Fantasy, Horror, Cyberpunk)"
           value={search}
@@ -263,6 +444,7 @@ export default function Home() {
               setSelectedTopic(null);
               setSearch("");
               setMinScore(0);
+              setSelectedCombo(null);
             }}
             style={{
               position: "absolute",
@@ -289,7 +471,7 @@ export default function Home() {
               maxHeight: 280,
               overflowY: "auto",
               background: "var(--bg-secondary)",
-              border: `1px solid var(--border)`,
+              border: "1px solid var(--border)",
               borderRadius: 12,
               marginTop: 4,
               zIndex: 100,
@@ -374,21 +556,28 @@ export default function Home() {
 
           {/* Results count */}
           <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 12px" }}>
-            {results.length} best combo{results.length !== 1 ? "s" : ""} found
+            {results.length} best combo{results.length !== 1 ? "s" : ""} found — tap one to see details
           </p>
 
           {/* Results List */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {results.map((combo, i) => (
-              <div
+              <button
                 key={`${combo.genre}-${combo.system}-${combo.rating}-${i}`}
+                onClick={() => setSelectedCombo(combo)}
                 className="animate-fade-in"
                 style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
                   background: "var(--bg-card)",
                   border: `1px solid ${combo.score >= 80 ? "rgba(46, 213, 115, 0.3)" : "var(--border)"}`,
                   borderRadius: 14,
                   padding: "14px 16px",
+                  cursor: "pointer",
                   transition: "all 0.2s",
+                  fontFamily: "inherit",
+                  fontSize: "inherit",
                 }}
               >
                 {/* Row 1: Genre + Rating + Score */}
@@ -430,7 +619,7 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
 
             {results.length === 0 && (
