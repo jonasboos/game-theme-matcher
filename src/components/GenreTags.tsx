@@ -22,16 +22,17 @@ export default function GenreTags({ selected, onSelect, mode }: Props) {
               onSelect(active ? selected.filter((x) => x !== g) : [...selected, g])
             }
             style={{
-              padding: "5px 12px",
-              border: `1px solid ${active ? "var(--accent)" : "rgba(255,255,255,0.08)"}`,
-              borderRadius: 18,
-              background: active ? "var(--accent)" : "rgba(255,255,255,0.03)",
-              color: active ? "#fff" : "var(--text-secondary)",
-              fontSize: 12,
+              padding: "4px 11px",
+              border: `1px solid ${active ? "var(--border-active)" : "var(--border)"}`,
+              borderRadius: 16,
+              background: active ? "var(--accent-subtle)" : "transparent",
+              color: active ? "var(--accent)" : "var(--text-muted)",
+              fontSize: 11,
               fontWeight: active ? 600 : 400,
               cursor: "pointer",
               transition: "all 0.2s ease",
               fontFamily: "inherit",
+              lineHeight: 1.4,
             }}
           >
             {g}

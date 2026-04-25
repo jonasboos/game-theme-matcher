@@ -12,6 +12,7 @@ interface Props {
 export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props) {
   const [search, setSearch] = useState(selectedTopic ?? "");
   const [open, setOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
@@ -44,22 +45,30 @@ export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props)
     onClear();
     setSearch("");
     setOpen(false);
+    setFocused(false);
   }, [onClear]);
-
-  const isActive = open;
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <div style={{ position: "relative" }}>
+      <div
+        style={{
+          position: "relative",
+          border: `1px solid ${open ? "var(--border-active)" : focused ? "rgba(255,255,255,0.15)" : "var(--border)"}`,
+          borderRadius: 12,
+          background: "var(--bg-glass)",
+          transition: "border-color 0.2s ease",
+        }}
+      >
         <span
           style={{
             position: "absolute",
-            left: 12,
+            left: 11,
             top: "50%",
             transform: "translateY(-50%)",
-            fontSize: 15,
-            opacity: 0.5,
+            fontSize: 14,
+            opacity: 0.4,
             pointerEvents: "none",
+            lineHeight: 1,
           }}
         >
           🔍
@@ -68,22 +77,21 @@ export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props)
           type="text"
           placeholder="Search a theme…"
           value={search}
-          onFocus={() => setOpen(true)}
+          onFocus={() => { setOpen(true); setFocused(true); }}
+          onBlur={() => setFocused(false)}
           onChange={(e) => {
             setSearch(e.target.value);
             setOpen(true);
           }}
           style={{
             width: "100%",
-            padding: "11px 34px 11px 36px",
-            border: `1px solid ${isActive ? "var(--accent)" : "rgba(255,255,255,0.08)"}`,
-            borderRadius: 12,
-            background: "rgba(255,255,255,0.03)",
+            padding: "10px 32px 10px 34px",
+            border: "none",
+            background: "transparent",
             color: "var(--text-primary)",
-            fontSize: 14,
+            fontSize: 13,
             outline: "none",
             boxSizing: "border-box",
-            transition: "border-color 0.2s ease",
             fontFamily: "inherit",
           }}
         />
@@ -92,16 +100,17 @@ export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props)
             onClick={handleClear}
             style={{
               position: "absolute",
-              right: 10,
+              right: 8,
               top: "50%",
               transform: "translateY(-50%)",
               background: "none",
               border: "none",
               color: "var(--text-muted)",
-              fontSize: 16,
+              fontSize: 14,
               cursor: "pointer",
               padding: 4,
               lineHeight: 1,
+              opacity: 0.6,
             }}
           >
             ✕
@@ -113,17 +122,16 @@ export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props)
         <div
           style={{
             position: "absolute",
-            top: "100%",
+            top: "calc(100% + 4px)",
             left: 0,
             right: 0,
-            maxHeight: 260,
+            maxHeight: 240,
             overflowY: "auto",
-            background: "var(--bg-secondary)",
+            background: "#111128",
             border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 12,
-            marginTop: 4,
+            borderRadius: 10,
             zIndex: 200,
-            boxShadow: "0 12px 48px rgba(0,0,0,0.5)",
+            boxShadow: "var(--shadow-lg)",
           }}
         >
           {filtered.map((topic) => (
@@ -133,10 +141,10 @@ export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props)
               style={{
                 display: "block",
                 width: "100%",
-                padding: "9px 14px",
+                padding: "8px 14px",
                 textAlign: "left",
                 border: "none",
-                background: topic === selectedTopic ? "rgba(233,69,96,0.1)" : "transparent",
+                background: topic === selectedTopic ? "rgba(233,69,96,0.08)" : "transparent",
                 color: "var(--text-primary)",
                 fontSize: 13,
                 cursor: "pointer",
@@ -146,7 +154,7 @@ export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props)
               onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
               onMouseLeave={(e) =>
                 (e.currentTarget.style.background = topic === selectedTopic
-                  ? "rgba(233,69,96,0.1)"
+                  ? "rgba(233,69,96,0.08)"
                   : "transparent")
               }
             >

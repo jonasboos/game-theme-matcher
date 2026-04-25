@@ -12,9 +12,9 @@ interface Props {
 function SummaryRow({ label, score }: { label: string; score: number }) {
   const color = score >= 80 ? "#2ed573" : "#ffa502";
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0" }}>
-      <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{label}</span>
-      <span style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0" }}>
+      <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>
         {score}%
       </span>
     </div>
@@ -27,15 +27,15 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
   return (
     <div className="animate-slide-up">
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 22 }}>
         <button
           onClick={onBack}
           style={{
-            width: 38,
-            height: 38,
+            width: 36,
+            height: 36,
             borderRadius: 10,
-            border: "1px solid rgba(255,255,255,0.08)",
-            background: "rgba(255,255,255,0.03)",
+            border: "1px solid var(--border)",
+            background: "var(--bg-glass)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -48,19 +48,19 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
         >
           ←
         </button>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.2 }}>
             {combo.genre}
           </div>
-          <div style={{ fontSize: 12, color: "var(--accent)", fontWeight: 500 }}>
+          <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 500 }}>
             🕹️ {combo.system}
           </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: "var(--success)", fontVariantNumeric: "tabular-nums" }}>
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: "var(--success)", fontVariantNumeric: "tabular-nums", lineHeight: 1.1 }}>
             {combo.score}%
           </div>
-          <div style={{ marginTop: 2 }}>
+          <div style={{ marginTop: 3 }}>
             <RatingBadge rating={combo.rating} />
           </div>
         </div>
@@ -68,15 +68,15 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
 
       {/* Stage groups */}
       {STAGE_GROUPS.map((group) => (
-        <div key={group.label} style={{ marginBottom: 14 }}>
+        <div key={group.label} style={{ marginBottom: 12 }}>
           <div
             style={{
               fontSize: 10,
               fontWeight: 700,
               textTransform: "uppercase",
-              letterSpacing: 1.5,
+              letterSpacing: 1.2,
               color: "var(--text-muted)",
-              marginBottom: 6,
+              marginBottom: 5,
               paddingLeft: 2,
             }}
           >
@@ -84,9 +84,9 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
           </div>
           <div
             style={{
-              background: "rgba(255,255,255,0.02)",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.06)",
+              background: "var(--bg-glass)",
+              borderRadius: 10,
+              border: "1px solid var(--border)",
               overflow: "hidden",
             }}
           >
@@ -95,26 +95,27 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
               const color =
                 score >= 80 ? "#2ed573" : score >= 60 ? "#f9ca24" : score >= 40 ? "#ffa502" : "#e94560";
               const short = stage.replace(/^Stage \d: /, "");
+              const isLast = idx === group.stages.length - 1;
               return (
                 <div
                   key={stage}
                   style={{
-                    padding: "10px 14px",
-                    borderBottom: idx < group.stages.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                    padding: "9px 13px",
+                    borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.04)",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                     <span style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 500 }}>
                       {short}
                     </span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>
                       {score}%
                     </span>
                   </div>
                   <div
                     style={{
-                      height: 6,
-                      background: "rgba(0,0,0,0.3)",
+                      height: 5,
+                      background: "rgba(0,0,0,0.25)",
                       borderRadius: 3,
                       overflow: "hidden",
                     }}
@@ -125,7 +126,7 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
                         height: "100%",
                         background: `linear-gradient(90deg, ${color}, ${color}88)`,
                         borderRadius: 3,
-                        transition: "width 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+                        transition: "width 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
                       }}
                     />
                   </div>
@@ -136,14 +137,14 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
         </div>
       ))}
 
-      {/* Fit summary */}
+      {/* Topic Fit summary */}
       <div
         style={{
-          background: "rgba(255,255,255,0.02)",
-          border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: 12,
-          padding: "0 14px",
-          marginTop: 6,
+          background: "var(--bg-glass)",
+          border: "1px solid var(--border)",
+          borderRadius: 10,
+          padding: "0 13px",
+          marginTop: 4,
         }}
       >
         <div
@@ -151,7 +152,7 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
             fontSize: 10,
             fontWeight: 700,
             textTransform: "uppercase",
-            letterSpacing: 1.5,
+            letterSpacing: 1.2,
             color: "var(--text-muted)",
             paddingTop: 12,
             marginBottom: 0,
@@ -159,11 +160,11 @@ export default function StageDetail({ combo, mode, onBack }: Props) {
         >
           Topic Fit
         </div>
-        <SummaryRow label="Genre" score={combo.genreScore} />
+        <SummaryRow label="Genre Fit" score={combo.genreScore} />
         <div style={{ height: 1, background: "rgba(255,255,255,0.04)" }} />
-        <SummaryRow label="System" score={combo.systemScore} />
+        <SummaryRow label="System Fit" score={combo.systemScore} />
         <div style={{ height: 1, background: "rgba(255,255,255,0.04)" }} />
-        <SummaryRow label="Rating" score={combo.ratingScore} />
+        <SummaryRow label="Rating Fit" score={combo.ratingScore} />
       </div>
     </div>
   );

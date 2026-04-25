@@ -3,8 +3,8 @@
 import { type Rating } from "@/lib/data";
 
 const COLORS: Record<Rating, { bg: string; text: string }> = {
-  Y: { bg: "#2ed573", text: "#0f0f1a" },
-  E: { bg: "#f9ca24", text: "#0f0f1a" },
+  Y: { bg: "#2ed573", text: "#0b0b1a" },
+  E: { bg: "#f9ca24", text: "#0b0b1a" },
   M: { bg: "#e94560", text: "#fff" },
 };
 
@@ -16,14 +16,15 @@ export default function RatingBadge({ rating }: { rating: Rating }) {
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "2px 8px",
-        borderRadius: 5,
+        padding: "1px 7px",
+        borderRadius: 4,
         fontSize: 10,
         fontWeight: 700,
-        lineHeight: 1.3,
+        lineHeight: "16px",
         background: c.bg,
         color: c.text,
-        letterSpacing: 0.8,
+        letterSpacing: 0.6,
+        fontFamily: "SF Mono, ui-monospace, monospace",
       }}
     >
       {rating}
