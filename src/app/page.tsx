@@ -14,24 +14,19 @@ type Mode = "single" | "dual";
 function getComboScore(topic: string, genre: string, system: string, rating: Rating, mode: Mode): number {
   const topicData = TOPICS[topic];
   if (!topicData) return 0;
-
   let genreScore: number;
   if (mode === "single") {
     genreScore = topicData[genre] ?? 0;
   } else {
-    // dual genre: take the average of the two constituent genres
     const parts = genre.split(" - ");
-    const a = topicData[parts[0]] ?? 0;
-    const b = topicData[parts[1]] ?? 0;
-    genreScore = Math.round((a + b) / 2);
+    genreScore = Math.round(((topicData[parts[0]] ?? 0) + (topicData[parts[1]] ?? 0)) / 2);
   }
-
-  const systemGenreScore = SYSTEMS[system]?.[genre] ?? 0;
-  const systemRatingScore = SYSTEMS[system]?.[rating] ?? 0;
-  const topicRatingScore = topicData[rating] ?? 0;
-
-  const score = genreScore * 0.40 + systemGenreScore * 0.25 + systemRatingScore * 0.175 + topicRatingScore * 0.175;
-  return Math.round(score);
+  return Math.round(
+    genreScore * 0.40 +
+    (SYSTEMS[system]?.[genre] ?? 0) * 0.25 +
+    (SYSTEMS[system]?.[rating] ?? 0) * 0.175 +
+    (topicData[rating] ?? 0) * 0.175
+  );
 }
 
 function getGenreScore(topic: string, genre: string, mode: Mode): number {
@@ -39,13 +34,7 @@ function getGenreScore(topic: string, genre: string, mode: Mode): number {
   if (!topicData) return 0;
   if (mode === "single") return topicData[genre] ?? 0;
   const parts = genre.split(" - ");
-  const a = topicData[parts[0]] ?? 0;
-  const b = topicData[parts[1]] ?? 0;
-  return Math.round((a + b) / 2);
-}
-
-function getSystemGenreScore(system: string, genre: string): number {
-  return SYSTEMS[system]?.[genre] ?? 0;
+  return Math.round(((topicData[parts[0]] ?? 0) + (topicData[parts[1]] ?? 0)) / 2);
 }
 
 interface Combo {
@@ -56,14 +45,14 @@ interface Combo {
 const SINGLE_GENRES = Object.keys(SINGLE_GENRE_SCORES);
 const DUAL_GENRES  = Object.keys(MULTI_GENRE_SCORES);
 
-function generateCombos(topic: string, mode: Mode): Combo[] {
+function generateCombos(topic: string, mode: Mode, activeSystems: string[]): Combo[] {
   const genres = mode === "single" ? SINGLE_GENRES : DUAL_GENRES;
   const combos: Combo[] = [];
   for (const genre of genres) {
     const gs = getGenreScore(topic, genre, mode);
     if (gs === 0) continue;
-    for (const system of ALL_SYSTEMS) {
-      const sysGs = getSystemGenreScore(system, genre);
+    for (const system of activeSystems) {
+      const sysGs = SYSTEMS[system]?.[genre] ?? 0;
       if (sysGs === 0) continue;
       for (const rating of ALL_RATINGS) {
         const score = getComboScore(topic, genre, system, rating, mode);
@@ -96,6 +85,28 @@ const STAGE_GROUPS = [
   { label: "Stage 3", stages: STAGE_LABELS.slice(6, 9) },
 ];
 
+// ---------- localStorage for systems ----------
+
+const STORAGE_KEY = "game-theme-matcher-systems";
+
+function loadActiveSystems(): string[] {
+  if (typeof window === "undefined") return ALL_SYSTEMS;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return ALL_SYSTEMS;
+}
+
+function saveActiveSystems(systems: string[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(systems));
+  } catch {}
+}
+
 // ---------- StageDetail ----------
 
 function StageDetail({ combo, onBack, mode }: { combo: Combo; onBack: () => void; mode: Mode }) {
@@ -110,8 +121,7 @@ function StageDetail({ combo, onBack, mode }: { combo: Combo; onBack: () => void
         <button
           onClick={onBack}
           style={{
-            background: "var(--bg-secondary)",
-            border: "1px solid var(--border)",
+            background: "var(--bg-secondary)", border: "1px solid var(--border)",
             borderRadius: 12, width: 40, height: 40,
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", fontSize: 18, color: "var(--text-primary)", flexShrink: 0,
@@ -268,48 +278,145 @@ function GenreTags({ selected, onSelect, mode }: { selected: string[]; onSelect:
 function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
   return (
     <div style={{
-      display: "flex",
-      background: "var(--bg-secondary)",
-      borderRadius: 24,
-      border: "1px solid var(--border)",
-      overflow: "hidden",
-      flexShrink: 0,
+      display: "flex", background: "var(--bg-secondary)",
+      borderRadius: 24, border: "1px solid var(--border)",
+      overflow: "hidden", flexShrink: 0,
     }}>
       <button
         onClick={() => onChange("single")}
         style={{
-          padding: "6px 16px",
-          border: "none",
+          padding: "6px 16px", border: "none",
           background: mode === "single" ? "var(--accent)" : "transparent",
           color: mode === "single" ? "#fff" : "var(--text-secondary)",
-          fontSize: 12,
-          fontWeight: 600,
-          cursor: "pointer",
-          transition: "all 0.2s",
+          fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
         }}
-      >
-        Single
-      </button>
+      >Single</button>
       <button
         onClick={() => onChange("dual")}
         style={{
-          padding: "6px 16px",
-          border: "none",
+          padding: "6px 16px", border: "none",
           background: mode === "dual" ? "var(--accent)" : "transparent",
           color: mode === "dual" ? "#fff" : "var(--text-secondary)",
-          fontSize: 12,
-          fontWeight: 600,
-          cursor: "pointer",
-          transition: "all 0.2s",
+          fontSize: 12, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
         }}
-      >
-        Dual
-      </button>
+      >Dual</button>
     </div>
   );
 }
 
-type SortKey = "score" | "genre" | "system" | "rating";
+// ---------- SystemSelector ----------
+
+function SystemSelector({
+  activeSystems,
+  onChange,
+}: {
+  activeSystems: string[];
+  onChange: (systems: string[]) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const allCount = ALL_SYSTEMS.length;
+  const activeCount = activeSystems.length;
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          width: "100%", padding: "10px 14px",
+          background: "var(--bg-secondary)",
+          border: `1px solid ${expanded ? "var(--accent)" : "var(--border)"}`,
+          borderRadius: 12,
+          color: "var(--text-primary)",
+          fontSize: 13, fontWeight: 600,
+          cursor: "pointer",
+          fontFamily: "inherit",
+        }}
+      >
+        <span>
+          🕹️ Available Systems <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>
+            ({activeCount}/{allCount})
+          </span>
+        </span>
+        <span style={{ fontSize: 14, color: "var(--text-muted)", transition: "transform 0.2s", transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}>
+          ▼
+        </span>
+      </button>
+
+      {expanded && (
+        <div style={{
+          marginTop: 6,
+          background: "var(--bg-secondary)",
+          border: "1px solid var(--border)",
+          borderRadius: 12,
+          padding: 12,
+          maxHeight: 300,
+          overflowY: "auto",
+        }}>
+          {/* Select All / Deselect All */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+            <button
+              onClick={() => onChange([...ALL_SYSTEMS])}
+              style={{
+                padding: "4px 12px", border: "1px solid var(--border)",
+                borderRadius: 12, background: "transparent",
+                color: "var(--text-secondary)", fontSize: 11,
+                cursor: "pointer", fontWeight: 600,
+              }}
+            >
+              Select All
+            </button>
+            <button
+              onClick={() => onChange([])}
+              style={{
+                padding: "4px 12px", border: "1px solid var(--border)",
+                borderRadius: 12, background: "transparent",
+                color: "var(--text-secondary)", fontSize: 11,
+                cursor: "pointer", fontWeight: 600,
+              }}
+            >
+              Deselect All
+            </button>
+          </div>
+
+          {/* System list */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {ALL_SYSTEMS.map((sys) => {
+              const active = activeSystems.includes(sys);
+              return (
+                <button
+                  key={sys}
+                  onClick={() => {
+                    if (active) {
+                      onChange(activeSystems.filter((s) => s !== sys));
+                    } else {
+                      onChange([...activeSystems, sys]);
+                    }
+                  }}
+                  style={{
+                    padding: "5px 12px",
+                    border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
+                    borderRadius: 16,
+                    background: active ? "var(--accent)" : "transparent",
+                    color: active ? "#fff" : "var(--text-secondary)",
+                    fontSize: 12,
+                    fontWeight: active ? 600 : 400,
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {sys}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Main Component ----------
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("single");
@@ -317,10 +424,22 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [sortKey, setSortKey] = useState<SortKey>("score");
-  const [minScore, setMinScore] = useState(0);
   const [selectedCombo, setSelectedCombo] = useState<Combo | null>(null);
+  const [activeSystems, setActiveSystems] = useState<string[]>([]);
+  const [systemsLoaded, setSystemsLoaded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    setActiveSystems(loadActiveSystems());
+    setSystemsLoaded(true);
+  }, []);
+
+  // Save to localStorage when changed
+  const handleSystemsChange = useCallback((systems: string[]) => {
+    setActiveSystems(systems);
+    saveActiveSystems(systems);
+  }, []);
 
   const filteredTopics = useMemo(() => {
     const q = search.toLowerCase();
@@ -328,12 +447,13 @@ export default function Home() {
   }, [search]);
 
   const results = useMemo(() => {
-    if (!selectedTopic) return [];
-    const combos = generateCombos(selectedTopic, mode);
-    let filtered = combos.filter((c) => c.score >= minScore);
+    if (!selectedTopic || !systemsLoaded) return [];
+    const combos = generateCombos(selectedTopic, mode, activeSystems);
+    let filtered = combos;
     if (selectedGenres.length > 0) {
       filtered = filtered.filter((c) => selectedGenres.includes(c.genre));
     }
+    // Always sort by score desc, deduplicate
     const seen = new Set<string>();
     const deduped: Combo[] = [];
     for (const c of filtered) {
@@ -343,15 +463,10 @@ export default function Home() {
         deduped.push(c);
       }
     }
-    deduped.sort((a, b) => {
-      if (sortKey === "score") return b.score - a.score;
-      if (sortKey === "genre") return a.genre.localeCompare(b.genre);
-      if (sortKey === "system") return a.system.localeCompare(b.system);
-      return a.rating.localeCompare(b.rating);
-    });
-    return deduped.slice(0, 30);
-  }, [selectedTopic, selectedGenres, sortKey, minScore, mode]);
+    return deduped.sort((a, b) => b.score - a.score).slice(0, 30);
+  }, [selectedTopic, selectedGenres, mode, activeSystems, systemsLoaded]);
 
+  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -366,7 +481,6 @@ export default function Home() {
     setSelectedTopic(topic);
     setSearch(topic);
     setShowDropdown(false);
-    setMinScore(0);
     setSelectedCombo(null);
   }, []);
 
@@ -401,6 +515,11 @@ export default function Home() {
         <ModeToggle mode={mode} onChange={handleModeChange} />
       </div>
 
+      {/* System Selector — always visible */}
+      {systemsLoaded && (
+        <SystemSelector activeSystems={activeSystems} onChange={handleSystemsChange} />
+      )}
+
       {/* Topic Search */}
       <div ref={dropdownRef} style={{ position: "relative", marginBottom: 16 }}>
         <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
@@ -428,7 +547,6 @@ export default function Home() {
             onClick={() => {
               setSelectedTopic(null);
               setSearch("");
-              setMinScore(0);
               setSelectedCombo(null);
             }}
             style={{
@@ -479,42 +597,8 @@ export default function Home() {
             <GenreTags selected={selectedGenres} onSelect={setSelectedGenres} mode={mode} />
           </div>
 
-          {/* Min score slider */}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
-              Min Score: {minScore}%
-            </label>
-            <input
-              type="range" min={0} max={100} step={10} value={minScore}
-              onChange={(e) => setMinScore(Number(e.target.value))}
-              style={{ width: "100%", accentColor: "var(--accent)" }}
-            />
-          </div>
-
-          {/* Sort */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>Sort:</span>
-            {(["score", "genre", "system", "rating"] as SortKey[]).map((k) => (
-              <button
-                key={k}
-                onClick={() => setSortKey(k)}
-                style={{
-                  padding: "4px 12px",
-                  border: `1px solid ${sortKey === k ? "var(--accent)" : "var(--border)"}`,
-                  borderRadius: 16,
-                  background: sortKey === k ? "var(--accent)" : "transparent",
-                  color: sortKey === k ? "#fff" : "var(--text-secondary)",
-                  fontSize: 12, fontWeight: sortKey === k ? 600 : 400,
-                  cursor: "pointer", textTransform: "capitalize",
-                }}
-              >
-                {k}
-              </button>
-            ))}
-          </div>
-
           <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 12px" }}>
-            {results.length} best combo{results.length !== 1 ? "s" : ""} found — tap one to see details
+            {results.length} best combo{results.length !== 1 ? "s" : ""} — sorted by score
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -564,7 +648,7 @@ export default function Home() {
             ))}
             {results.length === 0 && (
               <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
-                No combos match your filters. Try lowering the minimum score or clearing genre filters.
+                No combos match your filters. Try enabling more systems or clearing genre filters.
               </div>
             )}
           </div>
@@ -575,7 +659,7 @@ export default function Home() {
         <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-muted)" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
           <p style={{ fontSize: 14, lineHeight: 1.6 }}>
-            Search for a theme above and discover the best game genre, system, and age rating combinations.
+            Select which systems are available above, then search for a theme to find the best genre + system + rating combinations.
           </p>
         </div>
       )}
