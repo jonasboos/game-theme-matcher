@@ -23,11 +23,14 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100dvh;
+  /* landscape safety */
+  overflow-x: hidden;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-secondary);
@@ -48,15 +51,17 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 5px var(--accent); }
-  50% { box-shadow: 0 0 20px var(--accent); }
-}
-
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
 
 .animate-slide-up {
   animation: slideUp 0.4s ease-out;
+}
+
+/* Landscape-specific overrides */
+@media (orientation: landscape) and (max-height: 500px) {
+  body {
+    font-size: 14px;
+  }
 }

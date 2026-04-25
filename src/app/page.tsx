@@ -418,7 +418,20 @@ function SystemSelector({
 
 // ---------- Main Component ----------
 
+function useOrientation() {
+  const [landscape, setLandscape] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: landscape) and (max-height: 500px)");
+    setLandscape(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setLandscape(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return landscape;
+}
+
 export default function Home() {
+  const isLandscape = useOrientation();
   const [mode, setMode] = useState<Mode>("single");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -490,19 +503,21 @@ export default function Home() {
     setSelectedGenres([]);
   }, []);
 
+  const maxW = isLandscape ? 640 : 480;
+
   // Detail view
   if (selectedCombo) {
     return (
-      <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 16px 40px", minHeight: "100dvh" }}>
+      <div style={{ maxWidth: maxW, margin: "0 auto", padding: isLandscape ? "12px 16px 24px" : "16px 16px 40px", minHeight: "100dvh" }}>
         <StageDetail combo={selectedCombo} onBack={() => setSelectedCombo(null)} mode={mode} />
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 16px 40px", minHeight: "100dvh" }}>
+    <div style={{ maxWidth: maxW, margin: "0 auto", padding: isLandscape ? "10px 16px 24px" : "16px 16px 40px", minHeight: "100dvh" }}>
       {/* Header row with title + toggle */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20, paddingTop: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: isLandscape ? 10 : 20, paddingTop: 0 }}>
         <div>
           <div style={{ fontSize: 28, marginBottom: 2 }}>🎮</div>
           <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
@@ -521,7 +536,7 @@ export default function Home() {
       )}
 
       {/* Topic Search */}
-      <div ref={dropdownRef} style={{ position: "relative", marginBottom: 16 }}>
+      <div ref={dropdownRef} style={{ position: "relative", marginBottom: isLandscape ? 8 : 16 }}>
         <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>
           Select a Theme / Topic
         </label>
@@ -601,7 +616,7 @@ export default function Home() {
             {results.length} best combo{results.length !== 1 ? "s" : ""} — sorted by score
           </p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: isLandscape ? "grid" : "flex", gridTemplateColumns: "1fr 1fr", flexDirection: "column", gap: isLandscape ? 8 : 10 }}>
             {results.map((combo, i) => (
               <button
                 key={`${combo.genre}-${combo.system}-${combo.rating}-${i}`}
@@ -611,36 +626,36 @@ export default function Home() {
                   display: "block", width: "100%", textAlign: "left",
                   background: "var(--bg-card)",
                   border: `1px solid ${combo.score >= 80 ? "rgba(46, 213, 115, 0.3)" : "var(--border)"}`,
-                  borderRadius: 14, padding: "14px 16px",
+                  borderRadius: isLandscape ? 10 : 14, padding: isLandscape ? "10px 12px" : "14px 16px",
                   cursor: "pointer", transition: "all 0.2s",
                   fontFamily: "inherit", fontSize: "inherit",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: isLandscape ? 4 : 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: isLandscape ? 13 : 15, fontWeight: 700, color: "var(--text-primary)" }}>
                       {combo.genre}
                     </span>
                     <RatingBadge rating={combo.rating} />
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: combo.score >= 80 ? "var(--success)" : combo.score >= 60 ? "var(--warning)" : "var(--accent)" }}>
+                  <div style={{ fontSize: isLandscape ? 16 : 20, fontWeight: 800, color: combo.score >= 80 ? "var(--success)" : combo.score >= 60 ? "var(--warning)" : "var(--accent)" }}>
                     {combo.score}%
                   </div>
                 </div>
-                <div style={{ fontSize: 13, color: "var(--accent)", fontWeight: 500, marginBottom: 10 }}>
+                <div style={{ fontSize: isLandscape ? 11 : 13, color: "var(--accent)", fontWeight: 500, marginBottom: isLandscape ? 6 : 10 }}>
                   🕹️ {combo.system}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)", minWidth: 48 }}>Genre</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: isLandscape ? 2 : 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ fontSize: isLandscape ? 10 : 11, color: "var(--text-muted)", minWidth: isLandscape ? 36 : 48 }}>Genre</span>
                     <div style={{ flex: 1 }}><ScoreBar score={combo.genreScore} /></div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)", minWidth: 48 }}>System</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ fontSize: isLandscape ? 10 : 11, color: "var(--text-muted)", minWidth: isLandscape ? 36 : 48 }}>System</span>
                     <div style={{ flex: 1 }}><ScoreBar score={combo.systemScore} /></div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 11, color: "var(--text-muted)", minWidth: 48 }}>Rating</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ fontSize: isLandscape ? 10 : 11, color: "var(--text-muted)", minWidth: isLandscape ? 36 : 48 }}>Rating</span>
                     <div style={{ flex: 1 }}><ScoreBar score={combo.ratingScore} /></div>
                   </div>
                 </div>
