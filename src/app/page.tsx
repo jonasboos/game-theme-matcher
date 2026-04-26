@@ -11,6 +11,7 @@ import TopicSearch from "@/components/TopicSearch";
 import GenreTags from "@/components/GenreTags";
 import ComboCard from "@/components/ComboCard";
 import StageDetail from "@/components/StageDetail";
+import { Gamepad2 } from "lucide-react";
 
 function useOrientation() {
   const [landscape, setLandscape] = useState(false);
@@ -26,7 +27,7 @@ function useOrientation() {
 
 export default function Home() {
   const isLandscape = useOrientation();
-  const maxW = isLandscape ? 640 : 480;
+  const maxW = isLandscape ? "max-w-[640px]" : "max-w-[480px]";
 
   const [mode, setMode] = useState<Mode>("single");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -85,31 +86,21 @@ export default function Home() {
   // Detail view
   if (selectedCombo) {
     return (
-      <div style={{ maxWidth: maxW, margin: "0 auto", padding: isLandscape ? "12px 16px 24px" : "16px 16px 40px", minHeight: "100dvh" }}>
+      <div className={`${maxW} mx-auto min-h-dvh ${isLandscape ? "px-4 py-3 pb-6" : "px-4 py-4 pb-10"}`}>
         <StageDetail combo={selectedCombo} onBack={() => setSelectedCombo(null)} mode={mode} />
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: maxW, margin: "0 auto", padding: isLandscape ? "10px 16px 24px" : "16px 16px 40px", minHeight: "100dvh" }}>
+    <div className={`${maxW} mx-auto min-h-dvh ${isLandscape ? "px-4 py-2.5 pb-6" : "px-4 py-4 pb-10"}`}>
       {/* Header */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginBottom: isLandscape ? 10 : 20,
-      }}>
-        <div>
-          <div style={{ fontSize: 24, lineHeight: 1, marginBottom: 2 }}>🎮</div>
-          <h1 style={{
-            fontSize: 18,
-            fontWeight: 700,
-            margin: 0,
-            background: "linear-gradient(135deg, #eaeaea, #a0a0b0)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}>
+      <div className={`flex justify-between items-start ${isLandscape ? "mb-2.5" : "mb-5"}`}>
+        <div className="flex items-center gap-2">
+          <div className="text-2xl">
+            <Gamepad2 className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-lg font-bold bg-gradient-to-br from-foreground to-muted-foreground bg-clip-text text-transparent">
             Game Theme Matcher
           </h1>
         </div>
@@ -120,7 +111,7 @@ export default function Home() {
       {loaded && (
         <SystemSelector activeSystems={activeSystems} onChange={handleSystemsChange} />
       )}
-      <div style={{ marginBottom: 14 }}>
+      <div className="mb-3.5">
         <TopicSearch
           selectedTopic={selectedTopic}
           onSelect={handleTopicSelect}
@@ -131,21 +122,16 @@ export default function Home() {
       {/* Content */}
       {selectedTopic && (
         <>
-          <div style={{ marginBottom: 14 }}>
+          <div className="mb-3.5">
             <GenreTags selected={selectedGenres} onSelect={setSelectedGenres} mode={mode} />
           </div>
 
-          <p style={{ fontSize: 11, color: "var(--text-muted)", margin: "0 0 10px", fontWeight: 500 }}>
+          <p className="text-[11px] text-muted-foreground mb-2.5 font-medium">
             {results.length} best combination{results.length !== 1 ? "s" : ""}
           </p>
 
           <div
-            style={{
-              display: isLandscape ? "grid" : "flex",
-              gridTemplateColumns: "1fr 1fr",
-              flexDirection: "column",
-              gap: isLandscape ? 8 : 8,
-            }}
+            className={`${isLandscape ? "grid grid-cols-2" : "flex flex-col"} gap-2`}
           >
             {results.map((combo, i) => (
               <ComboCard
@@ -158,7 +144,7 @@ export default function Home() {
             ))}
 
             {results.length === 0 && (
-              <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>
+              <div className="text-center py-10 text-muted-foreground col-span-2">
                 No combos match. Try enabling more systems or clearing genre filters.
               </div>
             )}
@@ -167,15 +153,15 @@ export default function Home() {
       )}
 
       {!selectedTopic && loaded && (
-        <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--text-muted)" }}>
-          <div style={{ fontSize: 44, marginBottom: 14, opacity: 0.6 }}>🔍</div>
-          <p style={{ fontSize: 13, lineHeight: 1.7, maxWidth: 300, margin: "0 auto" }}>
+        <div className="text-center py-12 px-5 text-muted-foreground">
+          <div className="text-4xl mb-3.5 opacity-60">🔍</div>
+          <p className="text-[13px] leading-relaxed max-w-[300px] mx-auto">
             Select your available systems above, then search for a theme to find the best genre + system + rating match for your game idea.
           </p>
         </div>
       )}
 
-      <div style={{ textAlign: "center", marginTop: 28, fontSize: 10, color: "var(--text-muted)", opacity: 0.5 }}>
+      <div className="text-center mt-7 text-[10px] text-muted-foreground/50">
         Game Theme Matcher
       </div>
     </div>

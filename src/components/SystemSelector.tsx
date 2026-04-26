@@ -1,6 +1,8 @@
 "use client";
 
 import { ALL_SYSTEMS } from "@/lib/data";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   activeSystems: string[];
@@ -12,49 +14,25 @@ export default function SystemSelector({ activeSystems, onChange }: Props) {
   const activeCount = activeSystems.length;
 
   return (
-    <div style={{ marginBottom: 12 }}>
-      {/* Header row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 6,
-        }}
-      >
-        <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-secondary)", letterSpacing: 0.3 }}>
-          🕹️ Systems{" "}
-          <span style={{ fontWeight: 400, color: "var(--text-muted)" }}>
+    <div className="mb-3">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[11px] font-semibold text-muted-foreground tracking-wide">
+          Systems{" "}
+          <span className="font-normal text-muted-foreground/60">
             ({activeCount}/{allCount})
           </span>
         </span>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => onChange(activeCount === allCount ? [] : [...ALL_SYSTEMS])}
-          style={{
-            padding: "2px 10px",
-            border: "1px solid var(--border)",
-            borderRadius: 10,
-            background: "transparent",
-            color: "var(--text-muted)",
-            fontSize: 10,
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "inherit",
-            transition: "all 0.15s",
-          }}
+          className="h-5 px-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground"
         >
           {activeCount === allCount ? "Deselect All" : "Select All"}
-        </button>
+        </Button>
       </div>
 
-      {/* Chips */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 4,
-        }}
-      >
+      <div className="flex flex-wrap gap-1">
         {ALL_SYSTEMS.map((sys) => {
           const active = activeSystems.includes(sys);
           return (
@@ -64,26 +42,17 @@ export default function SystemSelector({ activeSystems, onChange }: Props) {
                 onChange(
                   active
                     ? activeSystems.filter((s) => s !== sys)
-                    : [...activeSystems, sys],
+                    : [...activeSystems, sys]
                 )
               }
-              style={{
-                padding: "3px 9px",
-                border: `1px solid ${active ? "rgba(233, 69, 96, 0.3)" : "var(--border)"}`,
-                borderRadius: 12,
-                background: active
-                  ? "linear-gradient(135deg, rgba(233,69,96,0.12), rgba(255,107,129,0.06))"
-                  : "transparent",
-                color: active ? "var(--accent)" : "var(--text-muted)",
-                fontSize: 10,
-                fontWeight: active ? 600 : 400,
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                fontFamily: "inherit",
-                lineHeight: 1.4,
-              }}
+              className="cursor-pointer"
             >
-              {sys}
+              <Badge
+                variant={active ? "default" : "outline"}
+                className="text-[10px] font-medium transition-colors"
+              >
+                {sys}
+              </Badge>
             </button>
           );
         })}

@@ -5,35 +5,16 @@ export default function ScoreBar({ score }: { score: number }) {
   const color =
     score >= 80 ? "#2ed573" : score >= 60 ? "#f9ca24" : score >= 40 ? "#ffa502" : "#e94560";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-      <div
-        style={{
-          flex: 1,
-          height: 4,
-          background: "rgba(255,255,255,0.05)",
-          borderRadius: 2,
-          overflow: "hidden",
-        }}
-      >
+    <div className="flex items-center gap-1.5">
+      <div className="flex-1 rounded-full bg-muted/50 overflow-hidden">
         <div
-          style={{
-            width: `${pct}%`,
-            height: "100%",
-            background: `linear-gradient(90deg, ${color}, ${color}aa)`,
-            borderRadius: 2,
-            transition: "width 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}
+          className="h-1 rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
       <span
-        style={{
-          fontSize: 10,
-          fontWeight: 700,
-          color,
-          minWidth: 24,
-          textAlign: "right",
-          fontVariantNumeric: "tabular-nums",
-        }}
+        className="text-[10px] font-bold min-w-[24px] text-right tabular-nums"
+        style={{ color }}
       >
         {score}%
       </span>

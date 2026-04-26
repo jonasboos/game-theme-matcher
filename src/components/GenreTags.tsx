@@ -2,6 +2,7 @@
 
 import { type Mode } from "@/lib/comboEngine";
 import { SINGLE_GENRES, DUAL_GENRES } from "@/lib/comboEngine";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   selected: string[];
@@ -12,7 +13,7 @@ interface Props {
 export default function GenreTags({ selected, onSelect, mode }: Props) {
   const genres = mode === "single" ? SINGLE_GENRES : DUAL_GENRES;
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+    <div className="flex flex-wrap gap-1.5">
       {genres.map((g) => {
         const active = selected.includes(g);
         return (
@@ -21,21 +22,14 @@ export default function GenreTags({ selected, onSelect, mode }: Props) {
             onClick={() =>
               onSelect(active ? selected.filter((x) => x !== g) : [...selected, g])
             }
-            style={{
-              padding: "4px 11px",
-              border: `1px solid ${active ? "var(--border-active)" : "var(--border)"}`,
-              borderRadius: 16,
-              background: active ? "var(--accent-subtle)" : "transparent",
-              color: active ? "var(--accent)" : "var(--text-muted)",
-              fontSize: 11,
-              fontWeight: active ? 600 : 400,
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              fontFamily: "inherit",
-              lineHeight: 1.4,
-            }}
+            className="cursor-pointer"
           >
-            {g}
+            <Badge
+              variant={active ? "default" : "outline"}
+              className="text-[11px] font-medium transition-colors"
+            >
+              {g}
+            </Badge>
           </button>
         );
       })}

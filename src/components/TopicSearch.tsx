@@ -2,6 +2,16 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { ALL_TOPICS } from "@/lib/data";
+import { Input } from "@/components/ui/input";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Search, X } from "lucide-react";
 
 interface Props {
   selectedTopic: string | null;
@@ -12,7 +22,6 @@ interface Props {
 export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props) {
   const [search, setSearch] = useState(selectedTopic ?? "");
   const [open, setOpen] = useState(false);
-  const [focused, setFocused] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
@@ -45,122 +54,51 @@ export default function TopicSearch({ selectedTopic, onSelect, onClear }: Props)
     onClear();
     setSearch("");
     setOpen(false);
-    setFocused(false);
   }, [onClear]);
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
-      <div
-        style={{
-          position: "relative",
-          border: `1px solid ${open ? "var(--border-active)" : focused ? "rgba(255,255,255,0.15)" : "var(--border)"}`,
-          borderRadius: 12,
-          background: "var(--bg-glass)",
-          transition: "border-color 0.2s ease",
-        }}
-      >
-        <span
-          style={{
-            position: "absolute",
-            left: 11,
-            top: "50%",
-            transform: "translateY(-50%)",
-            fontSize: 14,
-            opacity: 0.4,
-            pointerEvents: "none",
-            lineHeight: 1,
-          }}
-        >
-          🔍
-        </span>
-        <input
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
           type="text"
           placeholder="Search a theme…"
           value={search}
-          onFocus={() => { setOpen(true); setFocused(true); }}
-          onBlur={() => setFocused(false)}
+          onFocus={() => setOpen(true)}
           onChange={(e) => {
             setSearch(e.target.value);
             setOpen(true);
           }}
-          style={{
-            width: "100%",
-            padding: "10px 32px 10px 34px",
-            border: "none",
-            background: "transparent",
-            color: "var(--text-primary)",
-            fontSize: 13,
-            outline: "none",
-            boxSizing: "border-box",
-            fontFamily: "inherit",
-          }}
+          className="pl-9 pr-8 bg-muted/30 border-border"
         />
         {selectedTopic && (
           <button
             onClick={handleClear}
-            style={{
-              position: "absolute",
-              right: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "none",
-              border: "none",
-              color: "var(--text-muted)",
-              fontSize: 14,
-              cursor: "pointer",
-              padding: 4,
-              lineHeight: 1,
-              opacity: 0.6,
-            }}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            ✕
+            <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
 
       {open && filtered.length > 0 && (
-        <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + 4px)",
-            left: 0,
-            right: 0,
-            maxHeight: 240,
-            overflowY: "auto",
-            background: "#111128",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 10,
-            zIndex: 200,
-            boxShadow: "var(--shadow-lg)",
-          }}
-        >
-          {filtered.map((topic) => (
-            <button
-              key={topic}
-              onClick={() => handleSelect(topic)}
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "8px 14px",
-                textAlign: "left",
-                border: "none",
-                background: topic === selectedTopic ? "rgba(233,69,96,0.08)" : "transparent",
-                color: "var(--text-primary)",
-                fontSize: 13,
-                cursor: "pointer",
-                transition: "background 0.1s",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = topic === selectedTopic
-                  ? "rgba(233,69,96,0.08)"
-                  : "transparent")
-              }
-            >
-              {topic}
-            </button>
-          ))}
+        <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 rounded-xl border border-border bg-popover shadow-lg overflow-hidden">
+          <Command className="bg-transparent">
+            <CommandList className="max-h-60 overflow-y-auto">
+              <CommandGroup>
+                {filtered.map((topic) => (
+                  <CommandItem
+                    key={topic}
+                    value={topic}
+                    onSelect={() => handleSelect(topic)}
+                    className="cursor-pointer text-sm"
+                  >
+                    {topic}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
         </div>
       )}
     </div>
