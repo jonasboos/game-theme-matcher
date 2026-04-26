@@ -1,33 +1,18 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { type Rating } from "@/lib/data";
 
-const COLORS: Record<Rating, { bg: string; text: string }> = {
-  Y: { bg: "#2ed573", text: "#0b0b1a" },
-  E: { bg: "#f9ca24", text: "#0b0b1a" },
-  M: { bg: "#e94560", text: "#fff" },
+const VARIANTS: Record<Rating, "default" | "secondary" | "destructive"> = {
+  Y: "default",
+  E: "secondary",
+  M: "destructive",
 };
 
 export default function RatingBadge({ rating }: { rating: Rating }) {
-  const c = COLORS[rating];
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1px 7px",
-        borderRadius: 4,
-        fontSize: 10,
-        fontWeight: 700,
-        lineHeight: "16px",
-        background: c.bg,
-        color: c.text,
-        letterSpacing: 0.6,
-        fontFamily: "SF Mono, ui-monospace, monospace",
-      }}
-    >
+    <Badge variant={VARIANTS[rating]} className="h-4 px-1.5 text-[10px] font-bold tracking-wider">
       {rating}
-    </span>
+    </Badge>
   );
 }
